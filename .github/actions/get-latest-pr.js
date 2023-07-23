@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -19,24 +10,38 @@ const core_1 = __importDefault(require("@actions/core"));
 const github_1 = __importDefault(require("@actions/github"));
 const handle_error_1 = require("./handle-error");
 exports.GetLatestPrInputs = {
-    base: 'base',
-    status: 'status', // 'open', 'closed'
+    token: 'GITHUB_TOKEN',
+    base: 'GET_LATEST_PR_BASE',
+    status: 'GET_LATEST_PR_STATUS', // 'open', 'closed'
 };
 exports.GetLatestPrOutputs = {
     number: 'latest_pr_number',
     mergedAt: 'latest_pr_merged_at',
 };
-const getLatestPr = (base) => __awaiter(void 0, void 0, void 0, function* () {
+const getLatestPr = async (base, status) => {
     // input
     let baseValue = base;
+    let prStatus = status;
     if (!baseValue) {
         baseValue = core_1.default.getInput(exports.GetLatestPrInputs.base);
+        if (!baseValue) {
+            baseValue = process.env[exports.GetLatestPrInputs.base];
+        }
     }
-    const prStatus = core_1.default.getInput(exports.GetLatestPrInputs.status); // open, closed
+    if (!status) {
+        prStatus = core_1.default.getInput(exports.GetLatestPrInputs.status); // open, closed
+        if (!prStatus) {
+            prStatus = process.env[exports.GetLatestPrInputs.status];
+        }
+    }
+    let githubToken = core_1.default.getInput(exports.GetLatestPrInputs.token);
+    if (!githubToken) {
+        githubToken = process.env[exports.GetLatestPrInputs.token] ?? '';
+    }
     const MyOctokit = action_1.Octokit.plugin(plugin_rest_endpoint_methods_1.restEndpointMethods);
-    const octokit = new MyOctokit();
+    const octokit = new MyOctokit({ auth: githubToken });
     try {
-        const { data } = yield octokit.pulls.list({
+        const { data } = await octokit.pulls.list({
             owner: github_1.default.context.repo.owner,
             repo: github_1.default.context.repo.repo,
             base: baseValue,
@@ -62,5 +67,5 @@ const getLatestPr = (base) => __awaiter(void 0, void 0, void 0, function* () {
     core_1.default.setOutput(exports.GetLatestPrOutputs.number, '');
     core_1.default.setOutput(exports.GetLatestPrOutputs.mergedAt, '');
     return null;
-});
+};
 exports.default = getLatestPr;
