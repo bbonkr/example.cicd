@@ -8,6 +8,7 @@ import github from '@actions/github';
 import getLatestPr from './get-latest-pr';
 
 type GitHub = typeof github;
+type GitHubContext = typeof github.context;
 type Core = typeof core;
 
 type GetListOfPrs =
@@ -30,6 +31,7 @@ export const GetRelatedPrsOutput = {
 
 type GetRelatedPrsOptions = {
   github: GitHub;
+  context: GitHubContext;
   core: Core;
   base?: string;
 };
@@ -37,9 +39,9 @@ type GetRelatedPrsOptions = {
 export const getRelatedPrs = async (
   GetRelatedPrsOptions: GetRelatedPrsOptions
 ): Promise<GetListOfPrs | null> => {
-  const { github, core } = GetRelatedPrsOptions;
+  const { github, core, context } = GetRelatedPrsOptions;
 
-  const { owner, repo } = github.context.repo;
+  const { owner, repo } = context.repo;
 
   // input
   let baseValue = GetRelatedPrsOptions.base;
@@ -64,7 +66,7 @@ export const getRelatedPrs = async (
   }
 
   let latestMerged: Date;
-  const latestPrResults = await getLatestPr({ github, core });
+  const latestPrResults = await getLatestPr({ github, core, context });
   const latestPr = latestPrResults?.find((_, index) => index === 0);
   if (latestPr?.merged_at) {
     latestMerged = new Date(latestPr.merged_at);

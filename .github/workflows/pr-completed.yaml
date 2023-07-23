@@ -46,7 +46,7 @@ jobs:
         with:
           script: |
             const { getRelatedPrs } = require('.github/actions/get-related-prs.js')
-            await getRelatedPrs({ github, core })
+            await getRelatedPrs({ github, core, context })
 
       - name: Get latest PR
         uses: actions/github-script@v6
@@ -58,7 +58,7 @@ jobs:
         with:
           script: |
             const { getLatestPr } = require('.github/actions/get-latest-pr.js')
-            await getLatestPr({ github, core });
+            await getLatestPr({ github, core, context });
 
       - name: logging
         run: |
