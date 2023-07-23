@@ -60,8 +60,10 @@ const getRelatedPrs = async (GetRelatedPrsOptions) => {
         latestMerged = new Date('1990-01-01T00:00:00Z');
     }
     let prs = [];
+    let resultCount = 0;
+    let page = 1;
     do {
-        let page = 1;
+        resultCount = 0;
         const { data } = await github.rest.pulls.list({
             owner,
             repo,
@@ -70,7 +72,9 @@ const getRelatedPrs = async (GetRelatedPrsOptions) => {
             direction: 'desc',
             state: 'closed',
             page,
+            per_page: 100,
         });
+        resultCount = data?.length ?? 0;
         const upToPRs = data
             .slice()
             .filter((x) => x.merged_at && new Date(x.merged_at) > latestMerged);
@@ -80,8 +84,8 @@ const getRelatedPrs = async (GetRelatedPrsOptions) => {
         else {
             break;
         }
-        page = page + 1;
-    } while (true);
+        page = page + 1; // next page
+    } while (resultCount > 0);
     const labels = prs
         .flatMap((pr) => pr.labels.map((label) => label.name))
         .filter((x, index, arr) => index === arr.findIndex((a) => x === a));

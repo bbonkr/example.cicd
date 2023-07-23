@@ -84,9 +84,12 @@ export const getRelatedPrs = async (
   }
 
   let prs: GetListOfPrs = [];
+  let resultCount = 0;
+  let page = 1;
 
   do {
-    let page = 1;
+    resultCount = 0;
+
     const { data } = await github.rest.pulls.list({
       owner,
       repo,
@@ -95,7 +98,10 @@ export const getRelatedPrs = async (
       direction: 'desc',
       state: 'closed',
       page,
+      per_page: 100,
     });
+
+    resultCount = data?.length ?? 0;
 
     const upToPRs = data
       .slice()
@@ -106,8 +112,8 @@ export const getRelatedPrs = async (
       break;
     }
 
-    page = page + 1;
-  } while (true);
+    page = page + 1; // next page
+  } while (resultCount > 0);
 
   const labels = prs
     .flatMap((pr) => pr.labels.map((label) => label.name))
