@@ -110,3 +110,4 @@ ${prs.map((pr) => `- #${pr.number}`).join('\n')}
     return prs;
 };
 exports.getRelatedPrs = getRelatedPrs;
+exports.default = exports.getRelatedPrs;

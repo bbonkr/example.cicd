@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GetLatestPrOutputs = exports.GetLatestPrInputs = void 0;
+exports.getLatestPr = exports.GetLatestPrOutputs = exports.GetLatestPrInputs = void 0;
 const handle_error_1 = require("./handle-error");
 exports.GetLatestPrInputs = {
     token: 'GITHUB_TOKEN',
@@ -69,4 +69,5 @@ const getLatestPr = async (getLatesPrsOptions) => {
     core.setOutput(exports.GetLatestPrOutputs.mergedAt, '');
     return null;
 };
-exports.default = getLatestPr;
+exports.getLatestPr = getLatestPr;
+exports.default = exports.getLatestPr;
