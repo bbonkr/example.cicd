@@ -21,7 +21,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  # merge into dev; create pr int 👈 dev;
+  # merge into dev; create pr main 👈 dev;
   merge_into_dev:
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'dev'
@@ -41,7 +41,7 @@ jobs:
         run: |
           gh auth login
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Collect PR information
         uses: actions/github-script@v6
