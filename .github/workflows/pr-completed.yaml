@@ -28,8 +28,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - uses: actions/setup-node@v3
         with:
@@ -82,11 +80,11 @@ jobs:
         if: steps.get_latest_pr.outputs.latest_pr_number != ''
         run: |
           gh pr edit ${{ env.RELEASE_BRANCH_NAME }} \
-            --body '${{ env.PR_BODY }}' \
-            --title '${{ env.PRD_BRANCH_NAME }}' \
+            --body '${{ steps.get_pr_info.outputs.pr_body }}' \
+            --title '${{ env.RELEASE_BRANCH_NAME }}' \
             --add-label '${{ steps.get_pr_info.outputs.pr_labels }}' \
             --add-assignee '${{ steps.get_pr_info.outputs.pr_assignees }}' \
-            --add-project '${{ env.PR_PROJECT }}'
+            --add-project '${{ env.PR_PROJECT }}' \
             --add-reviewer '${{ steps.get_pr_info.outputs.pr_reviewers }}'
 
       - name: Create PR
@@ -94,11 +92,12 @@ jobs:
         run: |
           gh pr create --base ${{ env.RELEASE_BRANCH_NAME }} \
             --head ${{ github.event.pull_request.base.ref }} \
-            --label '${{ env.PR_LABELS }}' \
+            --body '${{ steps.get_pr_info.outputs.pr_body }}' \
+            --title '${{ env.RELEASE_BRANCH_NAME }}' \
+            --label '${{ steps.get_pr_info.outputs.pr_labels }}' \
+            --assignee '${{ steps.get_pr_info.outputs.pr_assignees }}' \
             --project '${{ env.PROJECT_BACKEND }}' \
-            --reviewer ${{ env.REVIEWER }} \
-            --body '${{ env.PR_BODY }}' \
-            --title '${{ env.RELEASE_BRANCH_NAME }}'
+            --reviewer '${{ steps.get_pr_info.outputs.pr_reviewers }}'
 
       - name: 'get next version name'
         uses: bbonkr/next-version-proposal-action@v1
