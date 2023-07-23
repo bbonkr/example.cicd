@@ -41,8 +41,8 @@ jobs:
         uses: actions/github-script@v6
         id: get_pr_info
         env:
-          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
-          RELATED_PR_BASE: '${{ github.event.pull_request.base }}'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELATED_PR_BASE: ${{ github.event.pull_request.base.ref }}
         with:
           script: |
             const getPrInfo = require('.github/actions/get-related-prs.js')
