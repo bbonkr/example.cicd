@@ -37,11 +37,11 @@ jobs:
         run: |
           npm install @octokit/action @octokit/plugin-rest-endpoint-methods @actions/core @actions/github
 
-      - name: 'Gh signin'
-        run: |
-          gh auth login
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: 'Gh signin'
+      #   run: |
+      #     gh auth login
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Collect PR information
         uses: actions/github-script@v6
@@ -78,6 +78,8 @@ jobs:
 
       - name: Edit PR
         if: steps.get_latest_pr.outputs.latest_pr_number != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr edit ${{ env.RELEASE_BRANCH_NAME }} \
             --body '${{ steps.get_pr_info.outputs.pr_body }}' \
@@ -89,6 +91,8 @@ jobs:
 
       - name: Create PR
         if: steps.get_latest_pr.outputs.latest_pr_number == ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr create --base ${{ env.RELEASE_BRANCH_NAME }} \
             --head ${{ github.event.pull_request.base.ref }} \
