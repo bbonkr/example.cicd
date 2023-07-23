@@ -1,23 +1,20 @@
 import { Octokit } from '@octokit/action';
-import {
-  RestEndpointMethodTypes,
-  restEndpointMethods,
-} from '@octokit/plugin-rest-endpoint-methods';
+import { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods';
 import core from '@actions/core';
 import github from '@actions/github';
 import getLatestPr from './get-latest-pr';
 
-type GitHub = typeof github;
 type GitHubContext = typeof github.context;
 type Core = typeof core;
 
 type GetListOfPrs =
   RestEndpointMethodTypes['pulls']['list']['response']['data'];
 
-export const GetRelatedPrsInput = {
-  base: 'RELATED_PR_BASE',
-  token: 'GITHUB_TOKEN',
-};
+// export const GetRelatedPrsInput = {
+//   base: 'RELATED_PR_BASE',
+//   target: 'RELATED_PR_TARGET',
+//   token: 'GITHUB_TOKEN',
+// };
 
 export const GetRelatedPrsOutput = {
   title: 'pr_title',
@@ -34,29 +31,30 @@ type GetRelatedPrsOptions = {
   context: GitHubContext;
   core: Core;
   base?: string;
+  target?: string;
 };
 
 export const getRelatedPrs = async (
   GetRelatedPrsOptions: GetRelatedPrsOptions
 ): Promise<GetListOfPrs | null> => {
-  const { github, core, context } = GetRelatedPrsOptions;
+  const { github, core, context, target } = GetRelatedPrsOptions;
 
   const { owner, repo } = context.repo;
 
   // input
   let baseValue = GetRelatedPrsOptions.base;
+  // if (!baseValue) {
+  //   baseValue = core.getInput(GetRelatedPrsInput.base);
+  // }
   if (!baseValue) {
-    baseValue = core.getInput(GetRelatedPrsInput.base);
-    if (!baseValue) {
-      baseValue = process.env.RELATED_PR_BASE;
-    }
+    baseValue = process.env.RELATED_PR_BASE;
   }
 
   if (!baseValue) {
     throw new Error('base required');
   }
 
-  let githubToken = core.getInput(GetRelatedPrsInput.token);
+  let githubToken = ''; // core.getInput(GetRelatedPrsInput.token);
   if (!githubToken) {
     githubToken = process.env.GITHUB_TOKEN ?? '';
   }
@@ -64,9 +62,20 @@ export const getRelatedPrs = async (
   if (!githubToken) {
     throw new Error('GitHub token required');
   }
+  let targetValue = target;
+  if (!targetValue) {
+    targetValue = process.env.RELATED_PR_TARGET;
+  }
 
   let latestMerged: Date;
-  const latestPrResults = await getLatestPr({ github, core, context });
+  const latestPrResults = await getLatestPr({
+    github,
+    core,
+    context,
+    head: baseValue,
+    base: targetValue,
+    status: 'closed',
+  });
   const latestPr = latestPrResults?.find((_, index) => index === 0);
   if (latestPr?.merged_at) {
     latestMerged = new Date(latestPr.merged_at);

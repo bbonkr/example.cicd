@@ -43,6 +43,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELATED_PR_BASE: ${{ github.event.pull_request.base.ref }}
+          RELATED_PR_TARGET: ${{ env.RELEASE_BRANCH_NAME }}
         with:
           script: |
             const { getRelatedPrs } = require('.github/actions/get-related-prs.js')
@@ -54,6 +55,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GET_LATEST_PR_BASE: ${{ env.RELEASE_BRANCH_NAME }}
+          GET_LATEST_PR_HEAD: ${{ github.event.pull_request.base.ref }}
           GET_LATEST_PR_STATUS: 'open' # open, closed
         with:
           script: |
