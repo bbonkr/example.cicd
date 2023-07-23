@@ -110,7 +110,7 @@ export const getLatestPr = async (
       return null;
     }
   } catch (err: unknown) {
-    handleError(err);
+    handleError(err, core);
   }
 
   core.setOutput(GetLatestPrOutputs.number, '');
