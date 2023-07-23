@@ -4,11 +4,12 @@ import github from '@actions/github';
 import { handleError } from './handle-error';
 import { Octokit } from '@octokit/action';
 
-export const GetLatestPrInputs = {
-  token: 'GITHUB_TOKEN',
-  base: 'GET_LATEST_PR_BASE',
-  status: 'GET_LATEST_PR_STATUS', // 'open', 'closed'
-};
+// export const GetLatestPrInputs = {
+//   token: 'GITHUB_TOKEN',
+//   base: 'GET_LATEST_PR_BASE',
+//   head: 'GET_LATEST_PR_HEAD',
+//   status: 'GET_LATEST_PR_STATUS', // 'open', 'closed'
+// };
 
 export const GetLatestPrOutputs = {
   number: 'latest_pr_number',
@@ -29,6 +30,7 @@ type GetLatestPrsOptions = {
   core: Core;
   context: GitHubContext;
   base?: string;
+  head?: string;
   status?: PrStatus;
 };
 
@@ -37,27 +39,34 @@ export const getLatestPr = async (
 ): Promise<GetLatestPrsResult | null> => {
   // input
 
-  const { github, core, context } = getLatesPrsOptions;
+  const { github, core, context, base, head } = getLatesPrsOptions;
 
-  let baseValue = getLatesPrsOptions.base;
+  let baseValue = base;
+  let headValue = head;
   let prStatus: PrStatus = getLatesPrsOptions.status;
 
+  // if (!baseValue) {
+  //   baseValue = core.getInput(GetLatestPrInputs.base);
+  // }
   if (!baseValue) {
-    baseValue = core.getInput(GetLatestPrInputs.base);
-    if (!baseValue) {
-      baseValue = process.env.GET_LATEST_PR_BASE;
-    }
+    baseValue = process.env.GET_LATEST_PR_BASE;
   }
+
+  // if (!headValue) {
+  //   headValue = core.getInput(GetLatestPrInputs.head);
+  // }
+  if (!headValue) {
+    headValue = process.env.GET_LATEST_PR_HEAD;
+  }
+  // if (!prStatus) {
+  //   prStatus = core.getInput(GetLatestPrInputs.status) as PrStatus; // open, closed
+  // }
 
   if (!prStatus) {
-    prStatus = core.getInput(GetLatestPrInputs.status) as PrStatus; // open, closed
-
-    if (!prStatus) {
-      prStatus = process.env.GET_LATEST_PR_STATUS as PrStatus;
-    }
+    prStatus = process.env.GET_LATEST_PR_STATUS as PrStatus;
   }
 
-  let githubToken = core.getInput(GetLatestPrInputs.token);
+  let githubToken = ''; //core.getInput(GetLatestPrInputs.token);
   if (!githubToken) {
     githubToken = process.env.GITHUB_TOKEN ?? '';
   }
@@ -69,6 +78,7 @@ export const getLatestPr = async (
       owner,
       repo,
       base: baseValue,
+      head: headValue,
       state: prStatus,
       sort: 'created',
       direction: 'desc',

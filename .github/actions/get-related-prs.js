@@ -3,12 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRelatedPrs = exports.GetRelatedPrsOutput = exports.GetRelatedPrsInput = void 0;
+exports.getRelatedPrs = exports.GetRelatedPrsOutput = void 0;
 const get_latest_pr_1 = __importDefault(require("./get-latest-pr"));
-exports.GetRelatedPrsInput = {
-    base: 'RELATED_PR_BASE',
-    token: 'GITHUB_TOKEN',
-};
+// export const GetRelatedPrsInput = {
+//   base: 'RELATED_PR_BASE',
+//   target: 'RELATED_PR_TARGET',
+//   token: 'GITHUB_TOKEN',
+// };
 exports.GetRelatedPrsOutput = {
     title: 'pr_title',
     body: 'pr_body',
@@ -18,28 +19,39 @@ exports.GetRelatedPrsOutput = {
     reviewers: 'pr_reviewers',
 };
 const getRelatedPrs = async (GetRelatedPrsOptions) => {
-    const { github, core, context } = GetRelatedPrsOptions;
+    const { github, core, context, target } = GetRelatedPrsOptions;
     const { owner, repo } = context.repo;
     // input
     let baseValue = GetRelatedPrsOptions.base;
+    // if (!baseValue) {
+    //   baseValue = core.getInput(GetRelatedPrsInput.base);
+    // }
     if (!baseValue) {
-        baseValue = core.getInput(exports.GetRelatedPrsInput.base);
-        if (!baseValue) {
-            baseValue = process.env.RELATED_PR_BASE;
-        }
+        baseValue = process.env.RELATED_PR_BASE;
     }
     if (!baseValue) {
         throw new Error('base required');
     }
-    let githubToken = core.getInput(exports.GetRelatedPrsInput.token);
+    let githubToken = ''; // core.getInput(GetRelatedPrsInput.token);
     if (!githubToken) {
         githubToken = process.env.GITHUB_TOKEN ?? '';
     }
     if (!githubToken) {
         throw new Error('GitHub token required');
     }
+    let targetValue = target;
+    if (!targetValue) {
+        targetValue = process.env.RELATED_PR_TARGET;
+    }
     let latestMerged;
-    const latestPrResults = await (0, get_latest_pr_1.default)({ github, core, context });
+    const latestPrResults = await (0, get_latest_pr_1.default)({
+        github,
+        core,
+        context,
+        head: baseValue,
+        base: targetValue,
+        status: 'closed',
+    });
     const latestPr = latestPrResults?.find((_, index) => index === 0);
     if (latestPr?.merged_at) {
         latestMerged = new Date(latestPr.merged_at);
