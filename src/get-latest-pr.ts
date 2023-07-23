@@ -95,11 +95,12 @@ export const getLatestPr = async (
       // env.GETLATESTPROUTPUTS_LATEST_PR_NUMBER
       // env.GETLATESTPROUTPUTS_LATEST_PR_MERGED_AT
       core.exportVariable(
-        `GetLatestPrOutputs_${GetLatestPrOutputs.number}`,
+        `GetLatestPrOutputs_${GetLatestPrOutputs.number}`.toUpperCase(),
         firstItem.number
       );
+
       core.exportVariable(
-        `GetLatestPrOutputs_${GetLatestPrOutputs.mergedAt}`,
+        `GetLatestPrOutputs_${GetLatestPrOutputs.mergedAt}`.toUpperCase(),
         firstItem.merged_at
       );
       return data;

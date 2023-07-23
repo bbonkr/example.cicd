@@ -73,32 +73,43 @@ jobs:
           echo "PR_ASSIGNEES=${{ env.GETRELATEDPRSOUTPUT_PR_ASSIGNEES }}"
           echo "PR_REVIERWER=${{ env.GETRELATEDPRSOUTPUT_PR_REVIEWERS  }}"
 
+          echo "PR_TITLE=${{ steps.get_pr_info.outputs.pr_title }}"
+          echo "PR_BODY=${{ steps.get_pr_info.outputs.pr_body }}"
+          echo "PR_LABELS=${{ steps.get_pr_info.outputs.pr_labels }}"
+          echo "PR_MILESTONE=${{ steps.get_pr_info.outputs.pr_milestone }}"
+          echo "PR_ASSIGNEES=${{ steps.get_pr_info.outputs.pr_assignees }}"
+          echo "PR_REVIERWER=${{ steps.get_pr_info.outputs.pr_reviewers }}"
+
       - name: Edit PR
-        if: ${{ env.GETLATESTPROUTPUTS_LATEST_PR_NUMBER != '' }}
+        # if: ${{ env.GETLATESTPROUTPUTS_LATEST_PR_NUMBER != '' }}
+        if: ${{ steps.get_latest_pr.outputs.latest_pr_number != '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr edit ${{ env.RELEASE_BRANCH_NAME }} \
-            --body '${{ env.GETRELATEDPRSOUTPUT_PR_BODY }}' \
+            --body '${{ steps.get_pr_info.outputs.pr_body }}' \
             --title '${{ env.RELEASE_BRANCH_NAME }}' \
-            --add-label '${{ env.GETRELATEDPRSOUTPUT_PR_LABELS }}' \
-            --add-assignee '${{ env.GETRELATEDPRSOUTPUT_PR_ASSIGNEES }}' \
+            --add-label '${{ steps.get_pr_info.outputs.pr_labels }}' \
+            --add-assignee '${{ steps.get_pr_info.outputs.pr_assignees }}' \
             --add-project '${{ env.PR_PROJECT }}' \
-            --add-reviewer '${{ env.GETRELATEDPRSOUTPUT_PR_REVIEWERS  }}'
+            --add-reviewer '${{ steps.get_pr_info.outputs.pr_reviewers  }}' \
+            --milestone '${{ steps.get_pr_info.outputs.pr_milestone }}'
 
       - name: Create PR
-        if: ${{ env.GETLATESTPROUTPUTS_LATEST_PR_NUMBER == '' }}
+        # if: ${{ env.GETLATESTPROUTPUTS_LATEST_PR_NUMBER == '' }}
+        if: ${{ steps.get_latest_pr.outputs.latest_pr_number == '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr create --base ${{ env.RELEASE_BRANCH_NAME }} \
             --head ${{ github.event.pull_request.base.ref }} \
-            --body '${{ env.GETRELATEDPRSOUTPUT_PR_BODY }}' \
+            --body '${{ steps.get_pr_info.outputs.pr_body }}' \
             --title '${{ env.RELEASE_BRANCH_NAME }}' \
-            --label '${{ env.GETRELATEDPRSOUTPUT_PR_LABELS }}' \
-            --assignee '${{ env.GETRELATEDPRSOUTPUT_PR_ASSIGNEES }}' \
-            --project '${{ env.PROJECT_BACKEND }}' \
-            --reviewer '${{ env.GETRELATEDPRSOUTPUT_PR_REVIEWERS  }}'
+            --label '${{ steps.get_pr_info.outputs.pr_labels }}' \
+            --assignee '${{ steps.get_pr_info.outputs.pr_assignees }}' \
+            --project '${{ env.PR_PROJECT }}' \
+            --reviewer '${{ steps.get_pr_info.outputs.pr_reviewers  }}' \
+            --milestone '${{ steps.get_pr_info.outputs.pr_milestone }}'
 
       - name: 'get next version name'
         uses: bbonkr/next-version-proposal-action@v1

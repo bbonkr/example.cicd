@@ -59,8 +59,8 @@ const getLatestPr = async (getLatesPrsOptions) => {
             core.setOutput(exports.GetLatestPrOutputs.mergedAt, firstItem.merged_at);
             // env.GETLATESTPROUTPUTS_LATEST_PR_NUMBER
             // env.GETLATESTPROUTPUTS_LATEST_PR_MERGED_AT
-            core.exportVariable(`GetLatestPrOutputs_${exports.GetLatestPrOutputs.number}`, firstItem.number);
-            core.exportVariable(`GetLatestPrOutputs_${exports.GetLatestPrOutputs.mergedAt}`, firstItem.merged_at);
+            core.exportVariable(`GetLatestPrOutputs_${exports.GetLatestPrOutputs.number}`.toUpperCase(), firstItem.number);
+            core.exportVariable(`GetLatestPrOutputs_${exports.GetLatestPrOutputs.mergedAt}`.toUpperCase(), firstItem.merged_at);
             return data;
         }
         else {
