@@ -2,6 +2,7 @@ import { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods';
 import core from '@actions/core';
 import github from '@actions/github';
 import { handleError } from './handle-error';
+import { Octokit } from '@octokit/action';
 
 export const GetLatestPrInputs = {
   token: 'GITHUB_TOKEN',
@@ -20,12 +21,11 @@ type GetLatestPrsResult =
   | RestEndpointMethodTypes['pulls']['list']['response']['data']
   | null;
 
-type GitHub = typeof github;
 type GitHubContext = typeof github.context;
 type Core = typeof core;
 
 type GetLatestPrsOptions = {
-  github: GitHub;
+  github: Octokit;
   core: Core;
   context: GitHubContext;
   base?: string;
@@ -62,11 +62,10 @@ export const getLatestPr = async (
     githubToken = process.env.GITHUB_TOKEN ?? '';
   }
 
-  const octokit = github.getOctokit(githubToken, undefined);
   const { owner, repo } = context.repo;
 
   try {
-    const { data } = await octokit.rest.pulls.list({
+    const { data } = await github.rest.pulls.list({
       owner,
       repo,
       base: baseValue,
