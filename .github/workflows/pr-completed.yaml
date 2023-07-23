@@ -37,12 +37,6 @@ jobs:
         run: |
           npm install @octokit/action @octokit/plugin-rest-endpoint-methods @actions/core @actions/github
 
-      # - name: 'Gh signin'
-      #   run: |
-      #     gh auth login
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Collect PR information
         uses: actions/github-script@v6
         id: get_pr_info
@@ -52,56 +46,57 @@ jobs:
         with:
           script: |
             const getPrInfo = require('.github/actions/get-related-prs.js')
-            await getPrInfo()
+            await getPrInfo({ github, core })
 
-      - uses: actions/github-script@v6
+      - name: Get latest PR
+        uses: actions/github-script@v6
         id: get_latest_pr
         env:
-          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
-          GET_LATEST_PR_BASE: '${{ env.RELEASE_BRANCH_NAME }}'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GET_LATEST_PR_BASE: ${{ env.RELEASE_BRANCH_NAME }}
           GET_LATEST_PR_STATUS: 'open' # open, closed
         with:
           script: |
             const getLatestPr = require('.github/actions/get-latest-pr.js')
-            await getLatestPr();
+            await getLatestPr({ github, core });
 
       - name: logging
         run: |
           echo "RELEASE_BRANCH_NAME=${{env.RELEASE_BRANCH_NAME}}"
           echo "base=${{ github.event.pull_request.base.ref }}"
-          echo "PR_TITLE=${{ steps.get_pr_info.outputs.pr_title }}"
-          echo "PR_BODY=${{ steps.get_pr_info.outputs.pr_body }}"
-          echo "PR_LABELS=${{ steps.get_pr_info.outputs.pr_labels }}"
-          echo "PR_MILESTONE=${{ steps.get_pr_info.outputs.pr_milestone }}"
-          echo "PR_ASSIGNEES=${{ steps.get_pr_info.outputs.pr_assignees }}"
-          echo "PR_REVIERWER=${{ steps.get_pr_info.outputs.pr_reviewers }}"
+          echo "PR_TITLE=${{ env.GETRELATEDPRSOUTPUT_PR_TITLE }}"
+          echo "PR_BODY=${{ env.GETRELATEDPRSOUTPUT_PR_BODY }}"
+          echo "PR_LABELS=${{ env.GETRELATEDPRSOUTPUT_PR_LABELS }}"
+          echo "PR_MILESTONE=${{ env.GETRELATEDPRSOUTPUT_PR_MILESTONE }}"
+          echo "PR_ASSIGNEES=${{ env.GETRELATEDPRSOUTPUT_PR_ASSIGNEES }}"
+          echo "PR_REVIERWER=${{ env.GETRELATEDPRSOUTPUT_PR_REVIEWERS  }}"
 
       - name: Edit PR
-        if: ${{ steps.get_latest_pr.outputs.latest_pr_number != '' }}
+        if: ${{ env.GETLATESTPROUTPUTS_LATEST_PR_NUMBER != '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr edit ${{ env.RELEASE_BRANCH_NAME }} \
-            --body '${{ steps.get_pr_info.outputs.pr_body }}' \
+            --body '${{ env.GETRELATEDPRSOUTPUT_PR_BODY }}' \
             --title '${{ env.RELEASE_BRANCH_NAME }}' \
-            --add-label '${{ steps.get_pr_info.outputs.pr_labels }}' \
-            --add-assignee '${{ steps.get_pr_info.outputs.pr_assignees }}' \
+            --add-label '${{ env.GETRELATEDPRSOUTPUT_PR_LABELS }}' \
+            --add-assignee '${{ env.GETRELATEDPRSOUTPUT_PR_ASSIGNEES }}' \
             --add-project '${{ env.PR_PROJECT }}' \
-            --add-reviewer '${{ steps.get_pr_info.outputs.pr_reviewers }}'
+            --add-reviewer '${{ env.GETRELATEDPRSOUTPUT_PR_REVIEWERS  }}'
 
       - name: Create PR
-        if: ${{ steps.get_latest_pr.outputs.latest_pr_number == '' }}
+        if: ${{ env.GETLATESTPROUTPUTS_LATEST_PR_NUMBER == '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr create --base ${{ env.RELEASE_BRANCH_NAME }} \
             --head ${{ github.event.pull_request.base.ref }} \
-            --body '${{ steps.get_pr_info.outputs.pr_body }}' \
+            --body '${{ env.GETRELATEDPRSOUTPUT_PR_BODY }}' \
             --title '${{ env.RELEASE_BRANCH_NAME }}' \
-            --label '${{ steps.get_pr_info.outputs.pr_labels }}' \
-            --assignee '${{ steps.get_pr_info.outputs.pr_assignees }}' \
+            --label '${{ env.GETRELATEDPRSOUTPUT_PR_LABELS }}' \
+            --assignee '${{ env.GETRELATEDPRSOUTPUT_PR_ASSIGNEES }}' \
             --project '${{ env.PROJECT_BACKEND }}' \
-            --reviewer '${{ steps.get_pr_info.outputs.pr_reviewers }}'
+            --reviewer '${{ env.GETRELATEDPRSOUTPUT_PR_REVIEWERS  }}'
 
       - name: 'get next version name'
         uses: bbonkr/next-version-proposal-action@v1

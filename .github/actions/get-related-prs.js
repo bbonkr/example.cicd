@@ -6,8 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getRelatedPrs = exports.GetRelatedPrsOutput = exports.GetRelatedPrsInput = void 0;
 const action_1 = require("@octokit/action");
 const plugin_rest_endpoint_methods_1 = require("@octokit/plugin-rest-endpoint-methods");
-const core_1 = __importDefault(require("@actions/core"));
-const github_1 = __importDefault(require("@actions/github"));
 const get_latest_pr_1 = __importDefault(require("./get-latest-pr"));
 exports.GetRelatedPrsInput = {
     base: 'RELATED_PR_BASE',
@@ -21,27 +19,29 @@ exports.GetRelatedPrsOutput = {
     assignees: 'pr_assignees',
     reviewers: 'pr_reviewers',
 };
-const getRelatedPrs = async (base) => {
+const getRelatedPrs = async (GetRelatedPrsOptions) => {
+    const { github, core } = GetRelatedPrsOptions;
+    const { owner, repo } = github.context.repo;
     // input
-    let baseValue = base;
+    let baseValue = GetRelatedPrsOptions.base;
     if (!baseValue) {
-        baseValue = core_1.default.getInput(exports.GetRelatedPrsInput.base);
+        baseValue = core.getInput(exports.GetRelatedPrsInput.base);
         if (!baseValue) {
-            baseValue = process.env[exports.GetRelatedPrsInput.base];
+            baseValue = process.env.RELATED_PR_BASE;
         }
     }
     if (!baseValue) {
         throw new Error('base required');
     }
-    let githubToken = core_1.default.getInput(exports.GetRelatedPrsInput.token);
+    let githubToken = core.getInput(exports.GetRelatedPrsInput.token);
     if (!githubToken) {
-        githubToken = process.env[exports.GetRelatedPrsInput.token] ?? '';
+        githubToken = process.env.GITHUB_TOKEN ?? '';
     }
     if (!githubToken) {
         throw new Error('GitHub token required');
     }
     let latestMerged;
-    const latestPrResults = await (0, get_latest_pr_1.default)();
+    const latestPrResults = await (0, get_latest_pr_1.default)({ github, core });
     const latestPr = latestPrResults?.find((_, index) => index === 0);
     if (latestPr?.merged_at) {
         latestMerged = new Date(latestPr.merged_at);
@@ -55,11 +55,12 @@ const getRelatedPrs = async (base) => {
     do {
         let page = 1;
         const { data } = await octokit.pulls.list({
-            owner: github_1.default.context.repo.owner,
-            repo: github_1.default.context.repo.repo,
+            owner,
+            repo,
             base: baseValue,
             sort: 'created',
             direction: 'desc',
+            state: 'closed',
             page,
         });
         const upToPRs = data
@@ -87,12 +88,25 @@ const getRelatedPrs = async (base) => {
 ${prs.map((pr) => `- #${pr.number}`).join('\n')}
 
     `;
-    core_1.default.setOutput(exports.GetRelatedPrsOutput.title, `PRs which Merged into ${baseValue}`);
-    core_1.default.setOutput(exports.GetRelatedPrsOutput.body, body);
-    core_1.default.setOutput(exports.GetRelatedPrsOutput.labels, (labels ?? []).join(','));
-    core_1.default.setOutput(exports.GetRelatedPrsOutput.assignees, (assignees ?? []).join(','));
-    core_1.default.setOutput(exports.GetRelatedPrsOutput.milestone, milestone?.number ?? '');
-    core_1.default.setOutput(exports.GetRelatedPrsOutput.reviewers, (assignees ?? []).join(','));
+    const title = `PRs which Merged into ${baseValue}`;
+    core.setOutput(exports.GetRelatedPrsOutput.title, title);
+    core.setOutput(exports.GetRelatedPrsOutput.body, body);
+    core.setOutput(exports.GetRelatedPrsOutput.labels, (labels ?? []).join(','));
+    core.setOutput(exports.GetRelatedPrsOutput.assignees, (assignees ?? []).join(','));
+    core.setOutput(exports.GetRelatedPrsOutput.milestone, milestone?.number ?? '');
+    core.setOutput(exports.GetRelatedPrsOutput.reviewers, (assignees ?? []).join(','));
+    // env.GETRELATEDPRSOUTPUT_PR_BODY
+    // env.GETRELATEDPRSOUTPUT_PR_TITLE
+    // env.GETRELATEDPRSOUTPUT_PR_LABELS
+    // env.GETRELATEDPRSOUTPUT_PR_MILESTONE
+    // env.GETRELATEDPRSOUTPUT_PR_ASSIGNEES
+    // env.GETRELATEDPRSOUTPUT_PR_REVIEWERS
+    core.exportVariable(`GetRelatedPrsOutput_${exports.GetRelatedPrsOutput.title}`.toUpperCase(), title);
+    core.exportVariable(`GetRelatedPrsOutput_${exports.GetRelatedPrsOutput.body}`.toUpperCase(), body);
+    core.exportVariable(`GetRelatedPrsOutput_${exports.GetRelatedPrsOutput.labels}`.toUpperCase(), (labels ?? []).join(','));
+    core.exportVariable(`GetRelatedPrsOutput_${exports.GetRelatedPrsOutput.assignees}`.toUpperCase(), (assignees ?? []).join(','));
+    core.exportVariable(`GetRelatedPrsOutput_${exports.GetRelatedPrsOutput.milestone}`.toUpperCase(), milestone?.number ?? '');
+    core.exportVariable(`GetRelatedPrsOutput_${exports.GetRelatedPrsOutput.reviewers}`.toUpperCase(), (assignees ?? []).join(','));
     return prs;
 };
 exports.getRelatedPrs = getRelatedPrs;
