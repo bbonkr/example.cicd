@@ -20,8 +20,8 @@ exports.GetRelatedPrsOutput = {
     reviewers: 'pr_reviewers',
 };
 const getRelatedPrs = async (GetRelatedPrsOptions) => {
-    const { github, core } = GetRelatedPrsOptions;
-    const { owner, repo } = github.context.repo;
+    const { github, core, context } = GetRelatedPrsOptions;
+    const { owner, repo } = context.repo;
     // input
     let baseValue = GetRelatedPrsOptions.base;
     if (!baseValue) {
@@ -41,7 +41,7 @@ const getRelatedPrs = async (GetRelatedPrsOptions) => {
         throw new Error('GitHub token required');
     }
     let latestMerged;
-    const latestPrResults = await (0, get_latest_pr_1.default)({ github, core });
+    const latestPrResults = await (0, get_latest_pr_1.default)({ github, core, context });
     const latestPr = latestPrResults?.find((_, index) => index === 0);
     if (latestPr?.merged_at) {
         latestMerged = new Date(latestPr.merged_at);

@@ -21,11 +21,13 @@ type GetLatestPrsResult =
   | null;
 
 type GitHub = typeof github;
+type GitHubContext = typeof github.context;
 type Core = typeof core;
 
 type GetLatestPrsOptions = {
   github: GitHub;
   core: Core;
+  context: GitHubContext;
   base?: string;
   status?: PrStatus;
 };
@@ -35,7 +37,7 @@ export const getLatestPr = async (
 ): Promise<GetLatestPrsResult | null> => {
   // input
 
-  const { github, core } = getLatesPrsOptions;
+  const { github, core, context } = getLatesPrsOptions;
 
   let baseValue = getLatesPrsOptions.base;
   let prStatus: PrStatus = getLatesPrsOptions.status;
@@ -61,8 +63,7 @@ export const getLatestPr = async (
   }
 
   const octokit = github.getOctokit(githubToken, undefined);
-  const owner = github.context.repo.owner;
-  const repo = github.context.repo.repo;
+  const { owner, repo } = context.repo;
 
   try {
     const { data } = await octokit.rest.pulls.list({
