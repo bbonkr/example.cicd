@@ -50,7 +50,7 @@ const getPrAsync = async (
       throw new Error(`Could not recognize pull_request number`);
     }
   } catch (err: unknown) {
-    handleError(err);
+    handleError(err, core);
   }
 
   core.setOutput(GetPrOutput.prNumber, '');

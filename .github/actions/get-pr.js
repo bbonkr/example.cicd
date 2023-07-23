@@ -40,7 +40,7 @@ const getPrAsync = async (pullRequestNumber) => {
         }
     }
     catch (err) {
-        (0, handle_error_1.handleError)(err);
+        (0, handle_error_1.handleError)(err, core_1.default);
     }
     core_1.default.setOutput(GetPrOutput.prNumber, '');
     return null;

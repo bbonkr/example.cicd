@@ -70,7 +70,7 @@ const getLatestPr = async (getLatesPrsOptions) => {
         }
     }
     catch (err) {
-        (0, handle_error_1.handleError)(err);
+        (0, handle_error_1.handleError)(err, core);
     }
     core.setOutput(exports.GetLatestPrOutputs.number, '');
     core.setOutput(exports.GetLatestPrOutputs.mergedAt, '');

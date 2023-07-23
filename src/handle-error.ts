@@ -1,7 +1,9 @@
-import core from "@actions/core";
-import { RequestError } from "@octokit/types";
+import core from '@actions/core';
+import { RequestError } from '@octokit/types';
 
-export const handleError = (err: unknown) => {
+type Core = typeof core;
+
+export const handleError = (err: unknown, core: Core) => {
   const octokitError = err as RequestError;
 
   if (octokitError) {
