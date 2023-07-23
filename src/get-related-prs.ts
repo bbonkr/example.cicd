@@ -34,7 +34,7 @@ type GetRelatedPrsOptions = {
   base?: string;
 };
 
-const getRelatedPrs = async (
+export const getRelatedPrs = async (
   GetRelatedPrsOptions: GetRelatedPrsOptions
 ): Promise<GetListOfPrs | null> => {
   const { github, core } = GetRelatedPrsOptions;

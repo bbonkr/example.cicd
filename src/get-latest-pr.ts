@@ -30,7 +30,7 @@ type GetLatestPrsOptions = {
   status?: PrStatus;
 };
 
-const getLatestPr = async (
+export const getLatestPr = async (
   getLatesPrsOptions: GetLatestPrsOptions
 ): Promise<GetLatestPrsResult | null> => {
   // input

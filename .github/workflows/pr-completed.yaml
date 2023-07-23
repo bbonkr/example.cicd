@@ -45,8 +45,8 @@ jobs:
           RELATED_PR_BASE: ${{ github.event.pull_request.base.ref }}
         with:
           script: |
-            const getPrInfo = require('.github/actions/get-related-prs.js')
-            await getPrInfo({ github, core })
+            const { getRelatedPrs } = require('.github/actions/get-related-prs.js')
+            await getRelatedPrs({ github, core })
 
       - name: Get latest PR
         uses: actions/github-script@v6
@@ -57,7 +57,7 @@ jobs:
           GET_LATEST_PR_STATUS: 'open' # open, closed
         with:
           script: |
-            const getLatestPr = require('.github/actions/get-latest-pr.js')
+            const { getLatestPr } = require('.github/actions/get-latest-pr.js')
             await getLatestPr({ github, core });
 
       - name: logging
