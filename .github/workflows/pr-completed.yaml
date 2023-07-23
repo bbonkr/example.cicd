@@ -41,13 +41,14 @@ jobs:
 
       - name: 'Gh signin'
         run: |
-          gh auth login --with-token ${{ github.token }}
+          gh auth login --with-token "${{ github.token }}"
 
-      - uses: actions/github-script@v6
+      - name: Collect PR information
+        uses: actions/github-script@v6
         id: get_pr_info
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELATED_PR_BASE: ${{ github.event.pull_request.base }}
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+          RELATED_PR_BASE: '${{ github.event.pull_request.base }}'
         with:
           script: |
             const getPrInfo = require('.github/actions/get-related-prs.js')
@@ -56,8 +57,8 @@ jobs:
       - uses: actions/github-script@v6
         id: get_latest_pr
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GET_LATEST_PR_BASE: ${{ env.RELEASE_BRANCH_NAME }}
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+          GET_LATEST_PR_BASE: '${{ env.RELEASE_BRANCH_NAME }}'
           GET_LATEST_PR_STATUS: 'open' # open, closed
         with:
           script: |

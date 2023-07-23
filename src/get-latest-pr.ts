@@ -8,8 +8,9 @@ import github from '@actions/github';
 import { handleError } from './handle-error';
 
 export const GetLatestPrInputs = {
-  base: 'base',
-  status: 'status', // 'open', 'closed'
+  token: 'GITHUB_TOKEN',
+  base: 'GET_LATEST_PR_BASE',
+  status: 'GET_LATEST_PR_STATUS', // 'open', 'closed'
 };
 
 export const GetLatestPrOutputs = {
@@ -35,7 +36,7 @@ const getLatestPr = async (
   if (!baseValue) {
     baseValue = core.getInput(GetLatestPrInputs.base);
     if (!baseValue) {
-      baseValue = process.env.GET_LATEST_PR_BASE;
+      baseValue = process.env[GetLatestPrInputs.base];
     }
   }
 
@@ -43,12 +44,17 @@ const getLatestPr = async (
     prStatus = core.getInput(GetLatestPrInputs.status) as PrStatus; // open, closed
 
     if (!prStatus) {
-      prStatus = process.env.GET_LATEST_PR_STATUS as PrStatus;
+      prStatus = process.env[GetLatestPrInputs.status] as PrStatus;
     }
   }
 
+  let githubToken = core.getInput(GetLatestPrInputs.token);
+  if (!githubToken) {
+    githubToken = process.env[GetLatestPrInputs.token] ?? '';
+  }
+
   const MyOctokit = Octokit.plugin(restEndpointMethods);
-  const octokit = new MyOctokit();
+  const octokit = new MyOctokit({ auth: githubToken });
 
   try {
     const { data } = await octokit.pulls.list({

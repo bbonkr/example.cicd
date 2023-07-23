@@ -12,6 +12,7 @@ type GetListOfPrs =
 
 export const GetRelatedPrsInput = {
   base: 'RELATED_PR_BASE',
+  token: 'GITHUB_TOKEN',
 };
 
 export const GetRelatedPrsOutput = {
@@ -40,6 +41,15 @@ export const getRelatedPrs = async (
     throw new Error('base required');
   }
 
+  let githubToken = core.getInput(GetRelatedPrsInput.token);
+  if (!githubToken) {
+    githubToken = process.env[GetRelatedPrsInput.token] ?? '';
+  }
+
+  if (!githubToken) {
+    throw new Error('GitHub token required');
+  }
+
   let latestMerged: Date;
   const latestPrResults = await getLatestPr();
   const latestPr = latestPrResults?.find((_, index) => index === 0);
@@ -51,7 +61,7 @@ export const getRelatedPrs = async (
 
   const MyOctokit = Octokit.plugin(restEndpointMethods);
 
-  const octokit = new MyOctokit();
+  const octokit = new MyOctokit({ auth: githubToken });
 
   let prs: GetListOfPrs = [];
 
