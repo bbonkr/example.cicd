@@ -41,7 +41,9 @@ jobs:
 
       - name: 'Gh signin'
         run: |
-          gh auth login --with-token "${{ github.token }}"
+          gh auth login
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Collect PR information
         uses: actions/github-script@v6
