@@ -1,8 +1,4 @@
-import { Octokit } from '@octokit/action';
-import {
-  RestEndpointMethodTypes,
-  restEndpointMethods,
-} from '@octokit/plugin-rest-endpoint-methods';
+import { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods';
 import core from '@actions/core';
 import github from '@actions/github';
 import { handleError } from './handle-error';
@@ -24,14 +20,25 @@ type GetLatestPrsResult =
   | RestEndpointMethodTypes['pulls']['list']['response']['data']
   | null;
 
+type GitHub = typeof github;
+type Core = typeof core;
+
+type GetLatestPrsOptions = {
+  github: GitHub;
+  core: Core;
+  base?: string;
+  status?: PrStatus;
+};
+
 const getLatestPr = async (
-  base?: string,
-  status?: PrStatus
+  getLatesPrsOptions: GetLatestPrsOptions
 ): Promise<GetLatestPrsResult | null> => {
   // input
 
-  let baseValue = base;
-  let prStatus: PrStatus = status;
+  const { github, core } = getLatesPrsOptions;
+
+  let baseValue = getLatesPrsOptions.base;
+  let prStatus: PrStatus = getLatesPrsOptions.status;
 
   if (!baseValue) {
     baseValue = core.getInput(GetLatestPrInputs.base);
@@ -40,7 +47,7 @@ const getLatestPr = async (
     }
   }
 
-  if (!status) {
+  if (!prStatus) {
     prStatus = core.getInput(GetLatestPrInputs.status) as PrStatus; // open, closed
 
     if (!prStatus) {
@@ -53,13 +60,14 @@ const getLatestPr = async (
     githubToken = process.env.GITHUB_TOKEN ?? '';
   }
 
-  const MyOctokit = Octokit.plugin(restEndpointMethods);
-  const octokit = new MyOctokit({ auth: githubToken });
+  const octokit = github.getOctokit(githubToken, undefined);
+  const owner = github.context.repo.owner;
+  const repo = github.context.repo.repo;
 
   try {
-    const { data } = await octokit.pulls.list({
-      owner: github.context.repo.owner,
-      repo: github.context.repo.repo,
+    const { data } = await octokit.rest.pulls.list({
+      owner,
+      repo,
       base: baseValue,
       state: prStatus,
       sort: 'created',
@@ -74,9 +82,22 @@ const getLatestPr = async (
       core.setOutput(GetLatestPrOutputs.number, firstItem.number);
       core.setOutput(GetLatestPrOutputs.mergedAt, firstItem.merged_at);
 
+      // env.GETLATESTPROUTPUTS_LATEST_PR_NUMBER
+      // env.GETLATESTPROUTPUTS_LATEST_PR_MERGED_AT
+      core.exportVariable(
+        `GetLatestPrOutputs_${GetLatestPrOutputs.number}`,
+        firstItem.number
+      );
+      core.exportVariable(
+        `GetLatestPrOutputs_${GetLatestPrOutputs.mergedAt}`,
+        firstItem.merged_at
+      );
       return data;
     } else {
-      throw new Error(`Lasted Pr (base=${base}) not found`);
+      // throw new Error(`Lasted Pr (base=${baseValue}) not found`);
+      core.notice(`Lasted Pr (base=${baseValue}) not found`);
+
+      return null;
     }
   } catch (err: unknown) {
     handleError(err);
@@ -84,6 +105,7 @@ const getLatestPr = async (
 
   core.setOutput(GetLatestPrOutputs.number, '');
   core.setOutput(GetLatestPrOutputs.mergedAt, '');
+
   return null;
 };
 
