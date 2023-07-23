@@ -1,0 +1,134 @@
+# ------------------------------------------------------------
+# When PR (dev 👈 working branch) is completed with merged
+# 1. Create PR (main 👈 dev)
+# 2. Create git tag with next version
+# 3. Create github release as draft with created git tag
+# ------------------------------------------------------------
+name: 'PR completed'
+
+on:
+  pull_request:
+    types:
+      - closed
+
+env:
+  RELEASE_BRANCH_NAME: main
+  REVIEWER: 'bbonkr' # reviewer for notifying
+  PR_PROJECT: 'Maintenances' # project name
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  # merge into dev; create pr int 👈 dev;
+  merge_into_dev:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'dev'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          npm install @octokit/action @octokit/plugin-rest-endpoint-methods @actions/core @actions/github
+
+      - name: 'Gh signin'
+        run: |
+          gh auth login --with-token ${{ github.token }}
+
+      - uses: actions/github-script@v6
+        id: get_pr_info
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELATED_PR_BASE: ${{ github.event.pull_request.base }}
+        with:
+          script: |
+            const getPrInfo = require('.github/actions/get-related-prs.js')
+            await getPrInfo()
+
+      - uses: actions/github-script@v6
+        id: get_latest_pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GET_LATEST_PR_BASE: ${{ env.RELEASE_BRANCH_NAME }}
+          GET_LATEST_PR_STATUS: 'open' # open, closed
+        with:
+          script: |
+            const getLatestPr = require('.github/actions/get-latest-pr.js')
+            await getLatestPr();
+
+      - name: logging
+        run: |
+          echo "RELEASE_BRANCH_NAME=${{env.RELEASE_BRANCH_NAME}}"
+          echo "base=${{ github.event.pull_request.base.ref }}"
+          echo "PR_TITLE=${{ steps.get_pr_info.outputs.pr_title }}"
+          echo "PR_BODY=${{ steps.get_pr_info.outputs.pr_body }}"
+          echo "PR_LABELS=${{ steps.get_pr_info.outputs.pr_labels }}"
+          echo "PR_MILESTONE=${{ steps.get_pr_info.outputs.pr_milestone }}"
+          echo "PR_ASSIGNEES=${{ steps.get_pr_info.outputs.pr_assignees }}"
+          echo "PR_REVIERWER=${{ steps.get_pr_info.outputs.pr_reviewers }}"
+
+      - name: Edit PR
+        if: steps.get_latest_pr.outputs.latest_pr_number != ''
+        run: |
+          gh pr edit ${{ env.RELEASE_BRANCH_NAME }} \
+            --body '${{ env.PR_BODY }}' \
+            --title '${{ env.PRD_BRANCH_NAME }}' \
+            --add-label '${{ steps.get_pr_info.outputs.pr_labels }}' \
+            --add-assignee '${{ steps.get_pr_info.outputs.pr_assignees }}' \
+            --add-project '${{ env.PR_PROJECT }}'
+            --add-reviewer '${{ steps.get_pr_info.outputs.pr_reviewers }}'
+
+      - name: Create PR
+        if: steps.get_latest_pr.outputs.latest_pr_number == ''
+        run: |
+          gh pr create --base ${{ env.RELEASE_BRANCH_NAME }} \
+            --head ${{ github.event.pull_request.base.ref }} \
+            --label '${{ env.PR_LABELS }}' \
+            --project '${{ env.PROJECT_BACKEND }}' \
+            --reviewer ${{ env.REVIEWER }} \
+            --body '${{ env.PR_BODY }}' \
+            --title '${{ env.RELEASE_BRANCH_NAME }}'
+
+      - name: 'get next version name'
+        uses: bbonkr/next-version-proposal-action@v1
+        id: next_version_proposal
+        with:
+          github_token: ${{ github.token }}
+          pr: ${{ github.event.pull_request.number }}
+          major_labels: 'major,next'
+          minor_labels: 'enhancement,feature'
+          patch_labels: 'bug,documentation,chore,dependencies'
+          next_version_prefix: 'v'
+
+      - name: 'Create tag'
+        uses: rickstaa/action-create-tag@v1
+        if: ${{ steps.next_version_proposal.outputs.next_version != '' }}
+        with:
+          tag: '${{ steps.next_version_proposal.outputs.next_version }}'
+          message: 'New release ${{ steps.next_version_proposal.outputs.next_version }}'
+          commit_sha: ${{ github.sha }}
+
+      - name: create GitHub Release
+        id: release_drafter
+        uses: release-drafter/release-drafter@v5
+        if: ${{ steps.next_version_proposal.outputs.next_version != '' }}
+        with:
+          config-name: release-drafter.yml
+          version: ${{ steps.next_version_proposal.outputs.next_version }}
+          publish: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: git tag skipped
+        if: ${{ steps.next_version_proposal.outputs.next_version == '' }}
+        run: |
+          echo "Next version tag is empty."
