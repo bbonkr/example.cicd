@@ -33,7 +33,7 @@ export const getRelatedPrs = async (
   if (!baseValue) {
     baseValue = core.getInput(GetRelatedPrsInput.base);
     if (!baseValue) {
-      baseValue = process.env[GetRelatedPrsInput.base];
+      baseValue = process.env.RELATED_PR_BASE;
     }
   }
 
@@ -43,7 +43,7 @@ export const getRelatedPrs = async (
 
   let githubToken = core.getInput(GetRelatedPrsInput.token);
   if (!githubToken) {
-    githubToken = process.env[GetRelatedPrsInput.token] ?? '';
+    githubToken = process.env.GITHUB_TOKEN ?? '';
   }
 
   if (!githubToken) {

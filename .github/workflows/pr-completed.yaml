@@ -77,7 +77,7 @@ jobs:
           echo "PR_REVIERWER=${{ steps.get_pr_info.outputs.pr_reviewers }}"
 
       - name: Edit PR
-        if: steps.get_latest_pr.outputs.latest_pr_number != ''
+        if: ${{ steps.get_latest_pr.outputs.latest_pr_number != '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -90,7 +90,7 @@ jobs:
             --add-reviewer '${{ steps.get_pr_info.outputs.pr_reviewers }}'
 
       - name: Create PR
-        if: steps.get_latest_pr.outputs.latest_pr_number == ''
+        if: ${{ steps.get_latest_pr.outputs.latest_pr_number == '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

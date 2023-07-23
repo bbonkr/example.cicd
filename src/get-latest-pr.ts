@@ -36,7 +36,7 @@ const getLatestPr = async (
   if (!baseValue) {
     baseValue = core.getInput(GetLatestPrInputs.base);
     if (!baseValue) {
-      baseValue = process.env[GetLatestPrInputs.base];
+      baseValue = process.env.GET_LATEST_PR_BASE;
     }
   }
 
@@ -44,13 +44,13 @@ const getLatestPr = async (
     prStatus = core.getInput(GetLatestPrInputs.status) as PrStatus; // open, closed
 
     if (!prStatus) {
-      prStatus = process.env[GetLatestPrInputs.status] as PrStatus;
+      prStatus = process.env.GET_LATEST_PR_STATUS as PrStatus;
     }
   }
 
   let githubToken = core.getInput(GetLatestPrInputs.token);
   if (!githubToken) {
-    githubToken = process.env[GetLatestPrInputs.token] ?? '';
+    githubToken = process.env.GITHUB_TOKEN ?? '';
   }
 
   const MyOctokit = Octokit.plugin(restEndpointMethods);
