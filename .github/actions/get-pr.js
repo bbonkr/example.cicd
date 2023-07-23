@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -23,7 +14,7 @@ const GetPrAsyncInput = {
 const GetPrOutput = {
     prNumber: 'pull_request_number',
 };
-const getPrAsync = (pullRequestNumber) => __awaiter(void 0, void 0, void 0, function* () {
+const getPrAsync = async (pullRequestNumber) => {
     let prNumber;
     if (!pullRequestNumber) {
         prNumber = core_1.default.getInput(GetPrAsyncInput.prNumber);
@@ -36,7 +27,7 @@ const getPrAsync = (pullRequestNumber) => __awaiter(void 0, void 0, void 0, func
     const octokit = new MyOctokit();
     try {
         if (prNumberValue > 0) {
-            const { data } = yield octokit.pulls.get({
+            const { data } = await octokit.pulls.get({
                 owner: github_1.default.context.repo.owner,
                 repo: github_1.default.context.repo.repo,
                 pull_number: prNumberValue,
@@ -53,5 +44,5 @@ const getPrAsync = (pullRequestNumber) => __awaiter(void 0, void 0, void 0, func
     }
     core_1.default.setOutput(GetPrOutput.prNumber, '');
     return null;
-});
+};
 exports.default = getPrAsync;
