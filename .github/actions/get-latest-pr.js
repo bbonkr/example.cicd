@@ -32,10 +32,9 @@ const getLatestPr = async (getLatesPrsOptions) => {
     if (!githubToken) {
         githubToken = process.env.GITHUB_TOKEN ?? '';
     }
-    const octokit = github.getOctokit(githubToken, undefined);
     const { owner, repo } = context.repo;
     try {
-        const { data } = await octokit.rest.pulls.list({
+        const { data } = await github.rest.pulls.list({
             owner,
             repo,
             base: baseValue,

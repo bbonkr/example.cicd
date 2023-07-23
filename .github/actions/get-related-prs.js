@@ -4,8 +4,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getRelatedPrs = exports.GetRelatedPrsOutput = exports.GetRelatedPrsInput = void 0;
-const action_1 = require("@octokit/action");
-const plugin_rest_endpoint_methods_1 = require("@octokit/plugin-rest-endpoint-methods");
 const get_latest_pr_1 = __importDefault(require("./get-latest-pr"));
 exports.GetRelatedPrsInput = {
     base: 'RELATED_PR_BASE',
@@ -49,12 +47,10 @@ const getRelatedPrs = async (GetRelatedPrsOptions) => {
     else {
         latestMerged = new Date('1990-01-01T00:00:00Z');
     }
-    const MyOctokit = action_1.Octokit.plugin(plugin_rest_endpoint_methods_1.restEndpointMethods);
-    const octokit = new MyOctokit({ auth: githubToken });
     let prs = [];
     do {
         let page = 1;
-        const { data } = await octokit.pulls.list({
+        const { data } = await github.rest.pulls.list({
             owner,
             repo,
             base: baseValue,

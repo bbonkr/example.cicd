@@ -30,7 +30,7 @@ export const GetRelatedPrsOutput = {
 };
 
 type GetRelatedPrsOptions = {
-  github: GitHub;
+  github: Octokit;
   context: GitHubContext;
   core: Core;
   base?: string;
@@ -74,15 +74,11 @@ export const getRelatedPrs = async (
     latestMerged = new Date('1990-01-01T00:00:00Z');
   }
 
-  const MyOctokit = Octokit.plugin(restEndpointMethods);
-
-  const octokit = new MyOctokit({ auth: githubToken });
-
   let prs: GetListOfPrs = [];
 
   do {
     let page = 1;
-    const { data } = await octokit.pulls.list({
+    const { data } = await github.rest.pulls.list({
       owner,
       repo,
       base: baseValue,
