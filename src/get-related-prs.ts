@@ -34,7 +34,7 @@ type GetRelatedPrsOptions = {
   base?: string;
 };
 
-export const getRelatedPrs = async (
+const getRelatedPrs = async (
   GetRelatedPrsOptions: GetRelatedPrsOptions
 ): Promise<GetListOfPrs | null> => {
   const { github, core } = GetRelatedPrsOptions;
@@ -164,3 +164,5 @@ ${prs.map((pr) => `- #${pr.number}`).join('\n')}
 
   return prs;
 };
+
+export default getRelatedPrs;
